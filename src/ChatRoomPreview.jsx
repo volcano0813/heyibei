@@ -400,44 +400,6 @@ function ProgressRail({ stage, onSelect }) {
   );
 }
 
-function StageBrowser({ stage, onChange }) {
-  return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <p style={{ fontSize: 10, color: GOLD_DIM, letterSpacing: 1.4, fontFamily: "'Cormorant Garamond', serif" }}>
-          STAGE BROWSER
-        </p>
-        <p style={{ fontSize: 11, color: MUTED, fontFamily: "'Noto Sans SC', sans-serif" }}>点击查看这一局不同阶段</p>
-      </div>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
-        {STAGES.map((item) => {
-          const active = item.id === stage;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onChange(item.id)}
-              style={{
-                flexShrink: 0,
-                borderRadius: 999,
-                border: `0.5px solid ${active ? GOLD_DIM : GLASS_BORDER}`,
-                background: active ? GOLD_GLOW : "rgba(255,255,255,0.03)",
-                color: active ? GOLD : SOFT,
-                padding: "7px 11px",
-                fontSize: 12,
-                fontFamily: "'Noto Sans SC', sans-serif",
-                cursor: "pointer",
-              }}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function MessageBubble({ item }) {
   const isRight = item.side === "right";
   const bubbleBackground = isRight
@@ -725,7 +687,6 @@ export default function ChatRoomPreview({
   introMessages = [],
   onBack,
   allowStageSwitcher = true,
-  showStageBrowser = true,
 }) {
   const [stage, setStage] = useState(initialStage);
   const [input, setInput] = useState("");
@@ -771,7 +732,7 @@ export default function ChatRoomPreview({
             position: "sticky",
             top: 0,
             zIndex: 5,
-            padding: "18px 16px 14px",
+            padding: "12px 16px 10px",
             background: "linear-gradient(180deg, rgba(13,13,26,0.96) 0%, rgba(13,13,26,0.88) 72%, rgba(13,13,26,0.58) 100%)",
             backdropFilter: "blur(18px)",
             WebkitBackdropFilter: "blur(18px)",
@@ -780,8 +741,8 @@ export default function ChatRoomPreview({
         >
           <div
             style={{
-              padding: "12px 12px 14px",
-              borderRadius: 18,
+              padding: "10px 12px 11px",
+              borderRadius: 16,
               background: GLASS,
               border: `0.5px solid ${GLASS_BORDER}`,
               boxShadow: "0 14px 34px rgba(0,0,0,0.16)",
@@ -802,18 +763,18 @@ export default function ChatRoomPreview({
                   display: "flex",
                   alignItems: "center",
                   gap: 4,
-                  marginBottom: 12,
+                  marginBottom: 10,
                 }}
               >
                 <span style={{ fontSize: 16 }}>‹</span> 返回车队
               </button>
             )}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <div
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
                   background: "linear-gradient(135deg, rgba(201,169,110,0.18), rgba(124,92,219,0.24))",
                   border: `0.5px solid ${GLASS_BORDER}`,
                   display: "flex",
@@ -821,22 +782,21 @@ export default function ChatRoomPreview({
                   justifyContent: "center",
                   fontFamily: "'Cormorant Garamond', serif",
                   color: GOLD,
-                  fontSize: 18,
+                  fontSize: 16,
                   flexShrink: 0,
                 }}
               >
                 局
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.4, marginBottom: 6 }}>{roomInfo.title}</p>
+                <p style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.35, marginBottom: 4 }}>{roomInfo.title}</p>
                 <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6 }}>
                   {roomInfo.bar} · {roomInfo.time}
                 </p>
-                <p style={{ fontSize: 12, color: GOLD_DIM, marginTop: 4 }}>{roomInfo.headCount}</p>
+                <p style={{ fontSize: 11, color: GOLD_DIM, marginTop: 2 }}>{roomInfo.headCount}</p>
               </div>
             </div>
             <ProgressRail stage={stage} onSelect={setStage} />
-            {showStageBrowser && <StageBrowser stage={stage} onChange={setStage} />}
           </div>
         </div>
 
