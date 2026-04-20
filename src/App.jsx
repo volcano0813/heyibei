@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ChatRoomPreview from "./ChatRoomPreview.jsx";
 
 const GOLD = "#C9A96E";
 const GOLD_DIM = "rgba(201,169,110,0.35)";
@@ -158,6 +159,29 @@ function getCrewChatState(crew) {
     crewId: crew.id,
     messages: buildChatMessages(crew, crew.drinkWant),
   };
+}
+
+function mapCrewMessagesToRoomFeed(messages = []) {
+  return messages.map((msg) => {
+    if (msg.sender === "system") {
+      return {
+        id: `room-${msg.id}`,
+        type: "system_hint",
+        text: msg.text,
+        time: msg.time,
+      };
+    }
+
+    return {
+      id: `room-${msg.id}`,
+      type: "message",
+      side: msg.sender === "me" ? "right" : "left",
+      name: msg.name || "路过的客人",
+      text: msg.text,
+      time: msg.time,
+      avatarMode: msg.sender === "me" ? "me" : msg.anon ? "anonymous" : "named",
+    };
+  });
 }
 
 function getJoinStatusLabel(status, crew) {
@@ -1443,6 +1467,10 @@ function ChatPage({ bar, crew, chatState, onBack }) {
 }
 
 export default function App() {
+  if (typeof window !== "undefined" && window.location.pathname === "/preview/chat-room") {
+    return <ChatRoomPreview />;
+  }
+
   const [screen, setScreen] = useState("home");
   const [mood, setMood] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
@@ -1461,6 +1489,17 @@ export default function App() {
   const selectedBarName = selectedBar?.name || "FLASK Speakeasy";
   const currentCrews = crewsByBar[selectedBarName] || getCrewsForBar(selectedBarName).sort((a, b) => a.sortKey - b.sortKey);
   const activeCrew = currentCrews.find((crew) => crew.id === activeCrewId) || null;
+  const activeRoomInfo = activeCrew
+    ? {
+        title: `${activeCrew.drinkWant || selectedDrink?.name || "今晚"}慢喝局`,
+        bar: selectedBar?.name || bars[0].name,
+        time: activeCrew.timeLabel || "今晚 20:30",
+        headCount: `${activeCrew.filled}/${activeCrew.total} 人`,
+      }
+    : null;
+  const activeRoomIntro = activeCrew
+    ? mapCrewMessagesToRoomFeed((chatByCrewId[activeCrew.id] || getCrewChatState(activeCrew)).messages)
+    : [];
 
   const updateBarCrews = (barName, updater) => {
     setCrewsByBar((prev) => {
@@ -1600,11 +1639,12 @@ export default function App() {
           />
         )}
         {screen === "chat" && (
-          <ChatPage
-            bar={selectedBar || bars[0]}
-            crew={activeCrew}
-            chatState={activeCrew ? chatByCrewId[activeCrew.id] || getCrewChatState(activeCrew) : null}
+          <ChatRoomPreview
+            initialStage="grouped"
+            roomInfo={activeRoomInfo || undefined}
+            introMessages={activeRoomIntro}
             onBack={() => setScreen("crew")}
+            allowStageSwitcher={false}
           />
         )}
       </div>
