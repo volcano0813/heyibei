@@ -119,7 +119,54 @@ const defaultCrewsByBar = {
 };
 
 function getCrewsForBar(barName) {
-  return defaultCrewsByBar[barName] ? defaultCrewsByBar[barName].map((c) => ({ ...c })) : defaultCrewsByBar["FLASK Speakeasy"].map((c) => ({ ...c }));
+  const source = defaultCrewsByBar[barName] || defaultCrewsByBar["FLASK Speakeasy"];
+  return source.map((c) => ({
+    ...c,
+    members: (c.members || []).map((member) => ({ ...member })),
+  }));
+}
+
+function buildChatMessages(crew, drinkName) {
+  return [
+    {
+      id: `${crew.id}-chat-1`,
+      sender: "system",
+      text: `你已加入 ${crew.timeLabel} 的车队，人数达到 ${crew.filled}/${crew.total}，聊天已开启。`,
+      time: "刚刚",
+    },
+    {
+      id: `${crew.id}-chat-2`,
+      sender: "other",
+      name: crew.leaderAnon ? "路过的客人" : crew.leaderLabel,
+      text: `终于凑到两个人了，先在这里碰个杯。${drinkName ? `今晚我想先点 ${drinkName}。` : ""}`,
+      time: "刚刚",
+      anon: crew.leaderAnon,
+      symbol: crew.leaderSymbol || "☽",
+    },
+    {
+      id: `${crew.id}-chat-3`,
+      sender: "me",
+      name: "我",
+      text: "收到，我已经在路上了。到了以后我们认手里的那杯酒。",
+      time: "刚刚",
+    },
+  ];
+}
+
+function getCrewChatState(crew) {
+  return {
+    crewId: crew.id,
+    messages: buildChatMessages(crew, crew.drinkWant),
+  };
+}
+
+function getJoinStatusLabel(status, crew) {
+  if (status === "approved") {
+    return crew.filled >= 2 ? "进入聊天" : "已上车";
+  }
+  if (status === "pending") return "等待车主同意";
+  if (crew.total - crew.filled <= 0) return "已满";
+  return "申请上车";
 }
 
 function MemberAvatarStack({ members, maxVisible = 5 }) {
@@ -768,9 +815,8 @@ function MessageBoardPage({ bar, drink, mood, onBack, onGoToCrew }) {
   );
 }
 
-function CrewPage({ bar, drink, mood, onBack }) {
+function CrewPage({ bar, drink, mood, crews, myJoinStatuses, onBack, onCreateCrew, onJoinCrew, onEnterChat }) {
   const barName = bar?.name || "FLASK Speakeasy";
-  const [crews, setCrews] = useState(() => getCrewsForBar(barName).sort((a, b) => a.sortKey - b.sortKey));
   const [showCreate, setShowCreate] = useState(false);
   const [timeInput, setTimeInput] = useState("今晚 22:00");
   const [totalSeats, setTotalSeats] = useState(4);
@@ -778,10 +824,6 @@ function CrewPage({ bar, drink, mood, onBack }) {
   const [pitch, setPitch] = useState(mood || "");
   const [wantDrink, setWantDrink] = useState(drink?.name || "");
   const [aiMatch, setAiMatch] = useState(true);
-
-  useEffect(() => {
-    setCrews(getCrewsForBar(barName).sort((a, b) => a.sortKey - b.sortKey));
-  }, [barName]);
 
   const openCreate = () => {
     setPitch(mood || "");
@@ -791,10 +833,9 @@ function CrewPage({ bar, drink, mood, onBack }) {
   };
 
   const handleCreateCrew = () => {
-    const nextSort = crews.length ? Math.min(...crews.map((c) => c.sortKey)) - 1 : 0;
     const newCrew = {
       id: `crew-${Date.now()}`,
-      sortKey: nextSort,
+      sortKey: crews.length ? Math.min(...crews.map((c) => c.sortKey)) - 1 : 0,
       leaderLabel: "我",
       leaderAnon: false,
       leaderSymbol: null,
@@ -807,7 +848,7 @@ function CrewPage({ bar, drink, mood, onBack }) {
       aiMatch,
       members: [{ anon: false, name: "我" }],
     };
-    setCrews([newCrew, ...crews].sort((a, b) => a.sortKey - b.sortKey));
+    onCreateCrew(newCrew);
     setShowCreate(false);
   };
 
@@ -841,6 +882,24 @@ function CrewPage({ bar, drink, mood, onBack }) {
 
       <div style={{ flex: 1, overflow: "auto", padding: "8px 24px 120px", position: "relative", zIndex: 1 }}>
         {crews.map((c, i) => (
+          (() => {
+            const joinStatus = myJoinStatuses[c.id] || (c.leaderLabel === "我" ? "approved" : "none");
+            const canEnterChat = joinStatus === "approved" && c.filled >= 2;
+            const isPending = joinStatus === "pending";
+            const isApproved = joinStatus === "approved";
+            const isFull = c.total - c.filled <= 0;
+            const actionLabel = getJoinStatusLabel(joinStatus, c);
+            const helperText = isPending
+              ? "已提交申请，等车主点头后你才会正式上车。"
+              : isApproved
+                ? canEnterChat
+                  ? "车主已同意，你现在可以和同车的人聊天。"
+                  : "车主已同意，等车队凑满两人后自动开放聊天。"
+                : isFull
+                  ? "这辆车已经满员了。"
+                  : "先申请，车主同意后才能进入聊天。";
+
+            return (
           <div
             key={c.id}
             style={{
@@ -879,35 +938,59 @@ function CrewPage({ bar, drink, mood, onBack }) {
                   <span style={{ fontSize: 11, color: GOLD, fontFamily: "'Noto Sans SC', sans-serif", background: GOLD_GLOW, borderRadius: 20, padding: "3px 10px", border: `0.5px solid ${GOLD_DIM}` }}>
                     🥃 {c.drinkWant}
                   </span>
+                  {isPending && (
+                    <span style={{ fontSize: 10, color: GOLD, border: `0.5px solid ${GOLD_DIM}`, borderRadius: 20, padding: "2px 8px", fontFamily: "'Noto Sans SC', sans-serif" }}>
+                      待车主确认
+                    </span>
+                  )}
+                  {isApproved && c.leaderLabel !== "我" && (
+                    <span style={{ fontSize: 10, color: "#CFE8D7", border: "0.5px solid rgba(132, 204, 156, 0.35)", borderRadius: 20, padding: "2px 8px", fontFamily: "'Noto Sans SC', sans-serif" }}>
+                      已获同意
+                    </span>
+                  )}
                   {c.aiMatch && (
                     <span style={{ fontSize: 10, color: VIOLET_SOLID, border: `0.5px solid ${VIOLET}`, borderRadius: 20, padding: "2px 8px", fontFamily: "'Noto Sans SC', sans-serif" }}>
                       AI 匹配
                     </span>
                   )}
                 </div>
+                <p style={{ fontSize: 12, color: MUTED, fontFamily: "'Noto Sans SC', sans-serif", lineHeight: 1.6, marginTop: 10 }}>
+                  {helperText}
+                </p>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 12, paddingTop: 10, borderTop: `0.5px solid ${GLASS_BORDER}` }}>
               <MemberAvatarStack members={c.members} />
               <button
                 type="button"
+                onClick={() => {
+                  if (canEnterChat) {
+                    onEnterChat(c);
+                    return;
+                  }
+                  if (!isPending && !isApproved && !isFull) {
+                    onJoinCrew(c);
+                  }
+                }}
                 style={{
-                  background: c.total - c.filled <= 0 ? SURFACE3 : "transparent",
-                  border: `0.5px solid ${c.total - c.filled <= 0 ? GLASS_BORDER : GOLD_DIM}`,
+                  background: isPending || (isFull && !isApproved) ? SURFACE3 : "transparent",
+                  border: `0.5px solid ${isPending || (isFull && !isApproved) ? GLASS_BORDER : GOLD_DIM}`,
                   borderRadius: 20,
                   padding: "8px 16px",
                   fontSize: 13,
-                  color: c.total - c.filled <= 0 ? MUTED : GOLD,
+                  color: isPending || (isFull && !isApproved) ? MUTED : GOLD,
                   fontFamily: "'Noto Sans SC', sans-serif",
-                  cursor: c.total - c.filled <= 0 ? "default" : "pointer",
+                  cursor: canEnterChat || (!isPending && !isApproved && !isFull) ? "pointer" : "default",
                   flexShrink: 0,
                 }}
-                disabled={c.total - c.filled <= 0}
+                disabled={!canEnterChat && (isPending || isApproved || isFull)}
               >
-                {c.total - c.filled <= 0 ? "已满" : "申请上车"}
+                {actionLabel}
               </button>
             </div>
           </div>
+            );
+          })()
         ))}
       </div>
 
@@ -1099,11 +1182,302 @@ function CrewPage({ bar, drink, mood, onBack }) {
   );
 }
 
+function ChatPage({ bar, crew, chatState, onBack }) {
+  const [draft, setDraft] = useState("");
+  const [messages, setMessages] = useState(chatState?.messages || []);
+
+  useEffect(() => {
+    setMessages(chatState?.messages || []);
+  }, [chatState]);
+
+  const handleSend = () => {
+    if (!draft.trim()) return;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `chat-${Date.now()}`,
+        sender: "me",
+        name: "我",
+        text: draft.trim(),
+        time: "刚刚",
+      },
+    ]);
+    setDraft("");
+  };
+
+  const otherMembers = (crew?.members || []).filter((member) => member.name !== "我");
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
+      <StarField />
+      <div style={{ padding: "52px 24px 14px", position: "relative", zIndex: 2, borderBottom: `0.5px solid ${GLASS_BORDER}` }}>
+        <button
+          type="button"
+          onClick={onBack}
+          style={{
+            background: "none",
+            border: "none",
+            color: MUTED,
+            fontSize: 13,
+            fontFamily: "'Noto Sans SC', sans-serif",
+            cursor: "pointer",
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            marginBottom: 12,
+          }}
+        >
+          <span style={{ fontSize: 16 }}>‹</span> 返回车队
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(201,169,110,0.18), rgba(124,92,219,0.22))",
+              border: `0.5px solid ${GLASS_BORDER}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: GOLD,
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: 18,
+            }}
+          >
+            聊
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 12, color: GOLD_DIM, letterSpacing: 2, marginBottom: 4 }}>
+              CREW CHAT
+            </p>
+            <p style={{ fontSize: 16, color: "#fff", fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 500 }}>
+              {bar?.name || "FLASK Speakeasy"} · {crew?.timeLabel || "今晚"}
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 14,
+            background: GLASS,
+            border: `0.5px solid ${GLASS_BORDER}`,
+            borderRadius: 16,
+            padding: "12px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 13, color: SOFT, fontFamily: "'Noto Sans SC', sans-serif", marginBottom: 4 }}>
+              已上车 {crew?.filled || 0}/{crew?.total || 0}
+            </p>
+            <p style={{ fontSize: 12, color: MUTED, fontFamily: "'Noto Sans SC', sans-serif", lineHeight: 1.6 }}>
+              {crew?.pitch || "一起喝一杯。"}
+            </p>
+          </div>
+          <MemberAvatarStack members={crew?.members || []} />
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: "16px 24px 110px", position: "relative", zIndex: 1 }}>
+        {messages.map((msg, index) => {
+          if (msg.sender === "system") {
+            return (
+              <div key={msg.id} style={{ display: "flex", justifyContent: "center", marginBottom: 14, opacity: 0, animation: `fadeSlideUp 0.4s ${index * 0.05}s forwards` }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: GOLD_DIM,
+                    fontFamily: "'Noto Sans SC', sans-serif",
+                    background: "rgba(201,169,110,0.08)",
+                    border: `0.5px solid ${GLASS_BORDER}`,
+                    borderRadius: 999,
+                    padding: "6px 12px",
+                    textAlign: "center",
+                    maxWidth: "100%",
+                  }}
+                >
+                  {msg.text}
+                </div>
+              </div>
+            );
+          }
+
+          const mine = msg.sender === "me";
+          return (
+            <div
+              key={msg.id}
+              style={{
+                display: "flex",
+                justifyContent: mine ? "flex-end" : "flex-start",
+                marginBottom: 12,
+                opacity: 0,
+                animation: `fadeSlideUp 0.4s ${index * 0.05}s forwards`,
+              }}
+            >
+              <div style={{ maxWidth: "82%" }}>
+                {!mine && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, paddingLeft: 4 }}>
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: "50%",
+                        background: msg.anon ? SURFACE3 : VIOLET_SOLID,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        color: msg.anon ? GOLD_DIM : "#fff",
+                        fontFamily: msg.anon ? "'Cormorant Garamond', serif" : "'Noto Sans SC', sans-serif",
+                      }}
+                    >
+                      {msg.anon ? msg.symbol : (msg.name && msg.name[0]) || "?"}
+                    </div>
+                    <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Noto Sans SC', sans-serif" }}>{msg.name}</span>
+                  </div>
+                )}
+                <div
+                  style={{
+                    background: mine ? "linear-gradient(135deg, rgba(201,169,110,0.95), rgba(231,201,147,0.88))" : GLASS,
+                    color: mine ? DEEP : "#fff",
+                    border: `0.5px solid ${mine ? "transparent" : GLASS_BORDER}`,
+                    borderRadius: mine ? "18px 18px 6px 18px" : "18px 18px 18px 6px",
+                    padding: "12px 14px",
+                    boxShadow: mine ? `0 10px 26px rgba(201,169,110,0.18)` : "none",
+                    backdropFilter: mine ? "none" : "blur(12px)",
+                    WebkitBackdropFilter: mine ? "none" : "blur(12px)",
+                  }}
+                >
+                  <p style={{ fontSize: 14, fontFamily: "'Noto Sans SC', sans-serif", lineHeight: 1.7, margin: 0 }}>{msg.text}</p>
+                </div>
+                <p
+                  style={{
+                    fontSize: 10,
+                    color: MUTED,
+                    fontFamily: "'Noto Sans SC', sans-serif",
+                    marginTop: 6,
+                    textAlign: mine ? "right" : "left",
+                    padding: "0 4px",
+                  }}
+                >
+                  {msg.time}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "12px 24px 34px",
+          background: `linear-gradient(transparent, ${DEEP} 34%)`,
+          zIndex: 3,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 10,
+            background: GLASS,
+            border: `0.5px solid ${GLASS_BORDER}`,
+            borderRadius: 22,
+            padding: "10px 10px 10px 16px",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 11, color: GOLD_DIM, fontFamily: "'Cormorant Garamond', serif", letterSpacing: 1, marginBottom: 4 }}>
+              今晚同行的人
+            </p>
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={otherMembers.length ? `和 ${otherMembers.length} 位同车人打个招呼` : "说点什么"}
+              style={{
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "#fff",
+                fontSize: 14,
+                fontFamily: "'Noto Sans SC', sans-serif",
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!draft.trim()}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: "50%",
+              background: draft.trim() ? GOLD : SURFACE3,
+              color: draft.trim() ? DEEP : MUTED,
+              border: "none",
+              cursor: draft.trim() ? "pointer" : "default",
+              fontSize: 13,
+              fontFamily: "'Noto Sans SC', sans-serif",
+              flexShrink: 0,
+            }}
+          >
+            发送
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [mood, setMood] = useState("");
   const [selectedDrink, setSelectedDrink] = useState(null);
   const [selectedBar, setSelectedBar] = useState(null);
+  const [crewsByBar, setCrewsByBar] = useState(() => {
+    const seed = {};
+    Object.keys(defaultCrewsByBar).forEach((barName) => {
+      seed[barName] = getCrewsForBar(barName).sort((a, b) => a.sortKey - b.sortKey);
+    });
+    return seed;
+  });
+  const [activeCrewId, setActiveCrewId] = useState(null);
+  const [chatByCrewId, setChatByCrewId] = useState({});
+  const [myJoinStatuses, setMyJoinStatuses] = useState({});
+
+  const selectedBarName = selectedBar?.name || "FLASK Speakeasy";
+  const currentCrews = crewsByBar[selectedBarName] || getCrewsForBar(selectedBarName).sort((a, b) => a.sortKey - b.sortKey);
+  const activeCrew = currentCrews.find((crew) => crew.id === activeCrewId) || null;
+
+  const updateBarCrews = (barName, updater) => {
+    setCrewsByBar((prev) => {
+      const current = prev[barName] || getCrewsForBar(barName).sort((a, b) => a.sortKey - b.sortKey);
+      return {
+        ...prev,
+        [barName]: updater(current),
+      };
+    });
+  };
+
+  const ensureCrewChat = (crew) => {
+    setChatByCrewId((prev) => {
+      if (prev[crew.id]) return prev;
+      return { ...prev, [crew.id]: getCrewChatState(crew) };
+    });
+  };
 
   return (
     <div
@@ -1183,7 +1557,54 @@ export default function App() {
             bar={selectedBar || bars[0]}
             drink={selectedDrink || tarotCards[0]}
             mood={mood || "有点累但不想睡"}
+            crews={currentCrews}
+            myJoinStatuses={myJoinStatuses}
             onBack={() => setScreen("board")}
+            onCreateCrew={(newCrew) => {
+              updateBarCrews(selectedBarName, (existing) => [newCrew, ...existing].sort((a, b) => a.sortKey - b.sortKey));
+              setMyJoinStatuses((prev) => ({ ...prev, [newCrew.id]: "approved" }));
+            }}
+            onJoinCrew={(crew) => {
+              setMyJoinStatuses((prev) => ({ ...prev, [crew.id]: "pending" }));
+
+              window.setTimeout(() => {
+                let approvedCrew = null;
+                setMyJoinStatuses((prev) => {
+                  if (prev[crew.id] !== "pending") return prev;
+                  return { ...prev, [crew.id]: "approved" };
+                });
+                updateBarCrews(selectedBarName, (existing) =>
+                  existing.map((item) => {
+                    if (item.id !== crew.id || item.total - item.filled <= 0) return item;
+                    const hasMe = (item.members || []).some((member) => member.name === "我");
+                    approvedCrew = {
+                      ...item,
+                      filled: hasMe ? item.filled : Math.min(item.total, item.filled + 1),
+                      members: hasMe ? item.members : [...(item.members || []), { anon: false, name: "我" }],
+                    };
+                    return approvedCrew;
+                  })
+                );
+                if (approvedCrew && approvedCrew.filled >= 2) {
+                  setActiveCrewId(approvedCrew.id);
+                  ensureCrewChat(approvedCrew);
+                  setScreen("chat");
+                }
+              }, 1800);
+            }}
+            onEnterChat={(crew) => {
+              setActiveCrewId(crew.id);
+              ensureCrewChat(crew);
+              setScreen("chat");
+            }}
+          />
+        )}
+        {screen === "chat" && (
+          <ChatPage
+            bar={selectedBar || bars[0]}
+            crew={activeCrew}
+            chatState={activeCrew ? chatByCrewId[activeCrew.id] || getCrewChatState(activeCrew) : null}
+            onBack={() => setScreen("crew")}
           />
         )}
       </div>
