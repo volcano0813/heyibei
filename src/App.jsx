@@ -1467,6 +1467,10 @@ function ChatPage({ bar, crew, chatState, onBack }) {
 }
 
 export default function App() {
+  if (typeof window !== "undefined" && window.location.pathname === "/preview/chat-room/in-progress") {
+    return <ChatRoomPreview initialStage="in_progress" />;
+  }
+
   if (typeof window !== "undefined" && window.location.pathname === "/preview/chat-room") {
     return <ChatRoomPreview />;
   }

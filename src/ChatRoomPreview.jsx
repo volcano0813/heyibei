@@ -33,7 +33,7 @@ const quickActionsByStage = {
   waiting_room: ["邀人上车", "调整这局", "发一句话"],
   grouped: ["发我的酒感自介", "回答这一问", "摇个题"],
   arriving: ["我已到店", "我看到位置了", "扫码入局"],
-  in_progress: ["摇个题", "今夜任务", "给别人推荐一杯", "贴个标签"],
+  in_progress: ["游戏", "第二杯", "心境漂流瓶"],
   wrap_up: ["留一句", "贴标签", "回流心境墙", "结束这局"],
 };
 
@@ -174,12 +174,21 @@ const stageCards = {
   ],
   in_progress: [
     {
+      id: "progress-situation",
+      type: "feature_card",
+      variant: "situation",
+      eyebrow: "局势提示",
+      title: "这局已经热起来了，适合来一轮互动",
+      description: "现在更适合把话头抛给彼此，而不是继续低头点单。",
+      actions: ["知道了", "换一条"],
+    },
+    {
       id: "progress-starter",
       type: "feature_card",
       variant: "starter",
-      eyebrow: "线下对话引子",
-      title: "今天有什么值得碰杯一下的瞬间？",
-      description: "把这个问题留给桌上的人面对面聊，手机只负责轻轻起个头。",
+      eyebrow: "开场 / 续场引导",
+      title: "来，给今晚找个值得碰杯的理由",
+      description: "这一轮别只说自己，把话头递给桌上的另一个人。",
       actions: ["我们线下聊这个", "下一题"],
     },
     {
@@ -192,22 +201,18 @@ const stageCards = {
       actions: ["开始这一轮", "换一个互动"],
     },
     {
-      id: "progress-task",
-      type: "feature_card",
-      variant: "task",
-      eyebrow: "今夜任务",
-      title: "给今晚这局贴一个只属于你们的标签",
-      bullets: ["给局里某个人推荐一杯酒", "参与一次圆桌派问题", "给今晚这局贴一个标签"],
-      actions: ["看任务", "换一个任务"],
+      id: "progress-result-cup",
+      type: "result_card",
+      eyebrow: "互动结果",
+      name: "第二杯推荐结果",
+      content: "本轮大家给阿青推荐最多的第二杯是：白桃气泡酒。理由是它最适合把这局往轻松、好接话的方向带。",
     },
     {
-      id: "progress-mini-game",
-      type: "feature_card",
-      variant: "mini",
-      eyebrow: "轻量入口",
-      title: "摇个题，三十秒开个新话头",
-      description: "更像一个桌边引子，不是复杂小游戏。",
-      actions: ["摇个题", "轻桌游"],
+      id: "progress-result-tag",
+      type: "result_card",
+      eyebrow: "互动结果",
+      name: "本局标签倾向",
+      content: "这一桌刚刚选出的局标签倾向：意外好聊局。",
     },
   ],
   wrap_up: [
@@ -253,6 +258,66 @@ const stageCards = {
 function createDefaultRoomInfo() {
   return ROOM_INFO;
 }
+
+const members = [
+  { name: "我", persona: "慢热微醺派" },
+  { name: "小 R", persona: "碰杯气氛组" },
+  { name: "阿青", persona: "安静续命派" },
+];
+
+const gameCategories = [
+  {
+    label: "轻开场",
+    items: [
+      { name: "第一杯命名", desc: "给彼此的第一杯起个今晚限定名字", people: "3人", vibe: "刚热起来", duration: "5分钟", summary: "每个人用一句话给别人的第一杯重新命名。" },
+      { name: "酒感接龙", desc: "顺着上一位的话接一个更像今晚的酒感", people: "3-5人", vibe: "轻松接话", duration: "6分钟", summary: "从一个酒感词开始，轮流把今晚的气氛往下接。" },
+      { name: "三词形容今晚这局", desc: "用三个词快速给这桌定调", people: "不限", vibe: "开口破冰", duration: "4分钟", summary: "每个人说三个词，最后选一个最像今晚的。" },
+    ],
+  },
+  {
+    label: "升温局",
+    items: [
+      { name: "第二杯法官", desc: "轮流替别人判今晚更适合哪一杯", people: "3-4人", vibe: "已经聊开", duration: "8分钟", summary: "每轮选一人，其余人都给他推荐第二杯并说理由。" },
+      { name: "酒局拍卖会", desc: "把今晚的瞬间拿出来拍一拍", people: "3-6人", vibe: "热一点", duration: "10分钟", summary: "轮流拿一个今晚瞬间出来，大家用一句话竞拍它的酒感价值。" },
+      { name: "谁最像……", desc: "轻轻把观察说出口", people: "3-5人", vibe: "熟起来之后", duration: "7分钟", summary: "每轮一个题干，大家指向最像的人并说一句原因。" },
+    ],
+  },
+  {
+    label: "推理局",
+    items: [
+      { name: "谁是卧底·酒局版", desc: "用酒感而不是词库来找卧底", people: "4-6人", vibe: "想再热一点", duration: "12分钟", summary: "每个人用一句酒感描述自己的词，找出最不像的那位。" },
+      { name: "真假一杯", desc: "说一个真心话，一个假酒感", people: "3-5人", vibe: "轻推理", duration: "8分钟", summary: "每人说两句，大家猜哪一句更像他真实的今晚。" },
+      { name: "轻阿瓦隆·酒桌版", desc: "只保留最轻量的怀疑与站队", people: "4-6人", vibe: "想玩一点脑子", duration: "15分钟", summary: "不做复杂身份，只保留桌边站队和判断。" },
+    ],
+  },
+  {
+    label: "收尾局",
+    items: [
+      { name: "今晚最值得碰杯的一刻", desc: "把今晚的高光说出来", people: "不限", vibe: "准备往回收", duration: "5分钟", summary: "每人说一个瞬间，最后选最值得再碰一杯的那个。" },
+      { name: "如果今晚这局是一首歌", desc: "给这局一个余味", people: "不限", vibe: "微醺收束", duration: "6分钟", summary: "轮流用歌名或者旋律形容今晚。" },
+      { name: "给这局贴标签", desc: "替今晚留下一个共同的称呼", people: "不限", vibe: "好收尾", duration: "4分钟", summary: "从几个标签里选一个，再补一句原因。" },
+    ],
+  },
+];
+
+const secondCupModes = [
+  { title: "给别人推荐第二杯", desc: "别只给自己点，替桌上的另一个人判断下一杯。" },
+  { title: "全桌选本局下一杯方向", desc: "这一轮更适合轻快、回魂，还是继续碰杯。" },
+  { title: "第二杯法官", desc: "选一个人，让全桌都给他开第二杯判词。" },
+  { title: "本局第二杯签", desc: "抽一张签，看看今晚第二杯该往哪里走。" },
+];
+
+const secondCupSuggestions = [
+  { name: "白桃气泡酒", reason: "更轻快，能把这桌往松弛和好接话的方向带。", fit: "更适合阿青 / 当前这局中段" },
+  { name: "梅子 Highball", reason: "不抢戏，适合让聊天继续往下走。", fit: "更适合全桌 / 正在升温的阶段" },
+  { name: "柚香金汤力", reason: "有一点提神感，适合让桌上重新亮起来。", fit: "更适合小 R / 需要续场的时候" },
+];
+
+const bottlePrompts = [
+  "如果你现在这杯酒会说话，它会替你给 @小 R 提一个什么建议？",
+  "这桌里谁的第一杯最像“我其实有点累了”？大家说说为什么。",
+  "借 @阿青 的酒，说一句他今晚不会先开口的话。",
+];
 
 function StarField() {
   const stars = useRef(
@@ -671,6 +736,53 @@ function EchoCard({ item }) {
   );
 }
 
+function BottomDrawer({ open, title, subtitle, onClose, children }) {
+  if (!open) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 20, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-end" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          margin: "0 auto",
+          maxHeight: "78vh",
+          overflow: "auto",
+          background: SURFACE,
+          borderRadius: "20px 20px 0 0",
+          border: `0.5px solid ${GLASS_BORDER}`,
+          borderBottom: "none",
+          padding: "18px 16px 22px",
+          boxShadow: "0 -20px 50px rgba(0,0,0,0.28)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+          <div>
+            <p style={{ fontSize: 15, color: "#fff", fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 500 }}>{title}</p>
+            <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, marginTop: 4, fontFamily: "'Noto Sans SC', sans-serif" }}>{subtitle}</p>
+          </div>
+          <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: MUTED, fontSize: 20, cursor: "pointer", padding: 0 }}>
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SimpleCard({ title, desc, action, onClick }) {
+  return (
+    <div style={{ background: GLASS, border: `0.5px solid ${GLASS_BORDER}`, borderRadius: 16, padding: "14px 14px 13px", marginBottom: 10, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}>
+      <p style={{ fontSize: 14, color: "#fff", fontWeight: 500, marginBottom: 6, fontFamily: "'Noto Sans SC', sans-serif" }}>{title}</p>
+      <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.65, marginBottom: 12, fontFamily: "'Noto Sans SC', sans-serif" }}>{desc}</p>
+      <button type="button" onClick={onClick} style={{ borderRadius: 999, border: `0.5px solid ${GOLD_DIM}`, background: "transparent", color: GOLD, padding: "7px 12px", fontSize: 12, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}>
+        {action}
+      </button>
+    </div>
+  );
+}
+
 function renderFeedItem(item) {
   if (item.type === "message") return <MessageBubble key={item.id} item={item} />;
   if (item.type === "system_hint") return <SystemHint key={item.id} item={item} />;
@@ -690,17 +802,66 @@ export default function ChatRoomPreview({
 }) {
   const [stage, setStage] = useState(initialStage);
   const [input, setInput] = useState("");
+  const [feedItems, setFeedItems] = useState([]);
+  const [drawer, setDrawer] = useState(null);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [bottleIndex, setBottleIndex] = useState(0);
   const roomInfo = roomInfoProp || createDefaultRoomInfo();
 
   useEffect(() => {
     setStage(initialStage);
   }, [initialStage]);
 
-  const feed = useMemo(() => [...baseMessages, ...introMessages, ...(stageCards[stage] || [])], [introMessages, stage]);
+  useEffect(() => {
+    setFeedItems([...baseMessages, ...introMessages, ...(stageCards[stage] || [])]);
+  }, [introMessages, stage]);
 
   useEffect(() => {
     document.title = "局聊天室";
   }, []);
+
+  const quickActions = quickActionsByStage[stage];
+
+  const startGameRound = () => {
+    if (!selectedGame) return;
+    setFeedItems((prev) => [
+      ...prev,
+      {
+        id: `game-start-${Date.now()}`,
+        type: "system_hint",
+        text: `本轮游戏开始：${selectedGame.name}。大家放下手机，用桌上的眼神和话头把这一轮玩起来。`,
+        time: "刚刚",
+      },
+    ]);
+    setDrawer(null);
+    setSelectedGame(null);
+  };
+
+  const startSecondCupRound = (title) => {
+    setFeedItems((prev) => [
+      ...prev,
+      {
+        id: `second-cup-${Date.now()}`,
+        type: "system_hint",
+        text: `第二杯互动开始：${title}。这一轮别急着给自己点，先替桌上的另一个人说一句理由。`,
+        time: "刚刚",
+      },
+    ]);
+    setDrawer(null);
+  };
+
+  const throwBottle = () => {
+    setFeedItems((prev) => [
+      ...prev,
+      {
+        id: `bottle-${Date.now()}`,
+        type: "system_hint",
+        text: `漂流瓶已投出：${bottlePrompts[bottleIndex]} 把答案留在线下说。`,
+        time: "刚刚",
+      },
+    ]);
+    setDrawer(null);
+  };
 
   return (
     <div
@@ -801,7 +962,7 @@ export default function ChatRoomPreview({
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "10px 16px 190px", position: "relative" }}>
-          {feed.map((item) => renderFeedItem(item))}
+          {feedItems.map((item) => renderFeedItem(item))}
         </div>
 
         <div
@@ -818,10 +979,16 @@ export default function ChatRoomPreview({
           }}
         >
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
-            {quickActionsByStage[stage].map((action, index) => (
+            {quickActions.map((action, index) => (
               <button
                 key={action}
                 type="button"
+                onClick={() => {
+                  if (stage !== "in_progress") return;
+                  if (action === "游戏") setDrawer("game");
+                  if (action === "第二杯") setDrawer("second-cup");
+                  if (action === "心境漂流瓶") setDrawer("bottle");
+                }}
                 style={{
                   flexShrink: 0,
                   borderRadius: 999,
@@ -889,6 +1056,94 @@ export default function ChatRoomPreview({
           </div>
         </div>
       </div>
+
+      <BottomDrawer
+        open={drawer === "game"}
+        title="来一轮小游戏"
+        subtitle="选一个更适合现在这局气氛的。手机只负责发起，真正好玩的部分留在桌上。"
+        onClose={() => {
+          setDrawer(null);
+          setSelectedGame(null);
+        }}
+      >
+        {!selectedGame ? (
+          <>
+            <CardShell eyebrow="系统推荐" title="适合现在这局：第二杯法官" description="这局已经有来有回了，现在最适合让大家替别人开第二杯判词。">
+              <p style={{ fontSize: 12, color: MUTED, fontFamily: "'Noto Sans SC', sans-serif" }}>如果想热一点：谁是卧底·酒局版</p>
+            </CardShell>
+            {gameCategories.map((category) => (
+              <div key={category.label} style={{ marginBottom: 14 }}>
+                <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>{category.label}</p>
+                {category.items.map((game) => (
+                  <SimpleCard key={game.name} title={game.name} desc={game.desc} action="查看玩法" onClick={() => setSelectedGame(game)} />
+                ))}
+              </div>
+            ))}
+          </>
+        ) : (
+          <CardShell eyebrow="游戏详情" title={selectedGame.name} description={selectedGame.summary}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 11, color: GOLD, background: GOLD_GLOW, border: `0.5px solid ${GOLD_DIM}`, borderRadius: 999, padding: "4px 10px" }}>{selectedGame.people}</span>
+              <span style={{ fontSize: 11, color: SOFT, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${GLASS_BORDER}`, borderRadius: 999, padding: "4px 10px" }}>{selectedGame.vibe}</span>
+              <span style={{ fontSize: 11, color: SOFT, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${GLASS_BORDER}`, borderRadius: 999, padding: "4px 10px" }}>{selectedGame.duration}</span>
+            </div>
+            <button type="button" onClick={startGameRound} style={{ width: "100%", borderRadius: 12, background: GOLD, color: DEEP, border: "none", padding: "12px 0", fontSize: 14, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}>
+              开这一轮
+            </button>
+          </CardShell>
+        )}
+      </BottomDrawer>
+
+      <BottomDrawer
+        open={drawer === "second-cup"}
+        title="第二杯"
+        subtitle="基于这局里大家现在的状态，看看下一杯该怎么走。"
+        onClose={() => setDrawer(null)}
+      >
+        <CardShell eyebrow="当前局势判断" title="这局已经适合来一杯更轻快的第二杯" description="现在不太适合继续加烈，更适合来一杯能让聊天继续往下走的第二杯。" />
+        <div style={{ marginBottom: 14 }}>
+          <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>第二杯玩法</p>
+          {secondCupModes.map((mode) => (
+            <SimpleCard key={mode.title} title={mode.title} desc={mode.desc} action="开始这轮" onClick={() => startSecondCupRound(mode.title)} />
+          ))}
+        </div>
+        <div>
+          <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>第二杯建议</p>
+          {secondCupSuggestions.map((item) => (
+            <CardShell key={item.name} title={item.name} description={item.reason}>
+              <p style={{ fontSize: 12, color: SOFT, fontFamily: "'Noto Sans SC', sans-serif" }}>{item.fit}</p>
+            </CardShell>
+          ))}
+        </div>
+      </BottomDrawer>
+
+      <BottomDrawer
+        open={drawer === "bottle"}
+        title="心境漂流瓶"
+        subtitle="让这杯酒替你开口。更偏高质量对话，不是游戏，也不是任务。"
+        onClose={() => setDrawer(null)}
+      >
+        <CardShell eyebrow="在场成员" title={`${members.map((m) => m.name).join(" / ")}`} description={members.map((m) => `${m.name}·${m.persona}`).join("  ·  ")} />
+        <CardShell eyebrow="定制话题签" title={bottlePrompts[bottleIndex]} description="这张签更适合在桌上慢慢说，不急着在手机里回答。">
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            {["就聊这个", "换一张", "轻一点", "深一点"].map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  if (label === "换一张") setBottleIndex((prev) => (prev + 1) % bottlePrompts.length);
+                }}
+                style={{ borderRadius: 999, border: `0.5px solid ${label === "就聊这个" ? GOLD_DIM : GLASS_BORDER}`, background: label === "就聊这个" ? GOLD_GLOW : "transparent", color: label === "就聊这个" ? GOLD : SOFT, padding: "7px 12px", fontSize: 12, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={throwBottle} style={{ width: "100%", borderRadius: 12, background: GOLD, color: DEEP, border: "none", padding: "12px 0", fontSize: 14, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}>
+            就聊这个
+          </button>
+        </CardShell>
+      </BottomDrawer>
     </div>
   );
 }
