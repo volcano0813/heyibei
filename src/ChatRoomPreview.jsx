@@ -31,7 +31,7 @@ const ROOM_INFO = {
 
 const quickActionsByStage = {
   waiting_room: ["邀人上车", "调整这局", "发一句话"],
-  grouped: ["发我的酒感自介", "回答这一问", "摇个题"],
+  grouped: [],
   arriving: ["我已到店", "我看到位置了", "扫码入局"],
   in_progress: ["游戏", "第二杯", "心境漂流瓶"],
   wrap_up: ["留一句", "贴标签", "回流心境墙", "结束这局"],
@@ -111,41 +111,7 @@ const stageCards = {
       actions: ["先等人来", "发一句话"],
     },
   ],
-  grouped: [
-    {
-      id: "grouped-intro",
-      type: "feature_card",
-      variant: "intro",
-      eyebrow: "酒感自我介绍",
-      title: "先用一杯酒介绍一下今晚的你",
-      description: "选一杯你现在最想点的酒，再用一句话说它像你最近的什么状态。",
-      chips: ["梅子 Highball", "Negroni", "Gin & Tonic", "Whisky Sour"],
-      actions: ["发我的酒感自介", "先看看别人怎么说"],
-    },
-    {
-      id: "grouped-result-1",
-      type: "result_card",
-      eyebrow: "自我介绍",
-      name: "小 R",
-      content: "我今晚最想点梅子 Highball，这杯像我最近表面轻松、其实有点累的状态。",
-    },
-    {
-      id: "grouped-result-2",
-      type: "result_card",
-      eyebrow: "自我介绍",
-      name: "阿青",
-      content: "我想点一杯偏苦一点的 Negroni，像这周看起来没事，其实心里有很多话没说。",
-    },
-    {
-      id: "grouped-roundtable",
-      type: "feature_card",
-      variant: "roundtable",
-      eyebrow: "圆桌派第一问",
-      title: "你来这局，是想放松、碰杯，还是想找人坐会儿？",
-      description: "这一问更适合大家各说一句，不用认真作答，开个口就好。",
-      actions: ["回答这一问", "换一题"],
-    },
-  ],
+  grouped: [],
   arriving: [
     {
       id: "arriving-status",
@@ -265,39 +231,95 @@ const members = [
   { name: "阿青", persona: "安静续命派" },
 ];
 
-const gameCategories = [
+const recommendedGameSets = [
+  [
+    {
+      name: "第二杯法官",
+      desc: "轮流替别人判今晚更适合哪一杯。",
+      people: "3-4人",
+      vibe: "有来有回",
+      duration: "8分钟",
+      summary: "每轮选一人，其余人都给他推荐第二杯并说理由。",
+      reason: "现在这桌 3 个人刚好，聊天已经有来有回，而且小R和阿青的酒格一动一静，很适合用“替别人判断”把交流往彼此身上带。",
+    },
+    {
+      name: "谁最像……",
+      desc: "轻轻把观察说出口。",
+      people: "3-5人",
+      vibe: "熟起来之后",
+      duration: "7分钟",
+      summary: "每轮一个题干，大家指向最像的人并说一句原因。",
+      reason: "这局参与活跃度已经起来了，但还没到需要强规则的时候，用观察型玩法最容易让每个人都接得上话。",
+    },
+    {
+      name: "真假一杯",
+      desc: "说一个真心话，一个假酒感。",
+      people: "3-5人",
+      vibe: "轻推理",
+      duration: "8分钟",
+      summary: "每人说两句，大家猜哪一句更像他真实的今晚。",
+      reason: "从当前聊天状态看，这桌已经不怕短暂停顿了，带一点猜测和误判，反而能把气氛往更有意思的方向推。",
+    },
+  ],
+  [
+    {
+      name: "酒感接龙",
+      desc: "顺着上一位的话接一个更像今晚的酒感。",
+      people: "3-5人",
+      vibe: "接话顺",
+      duration: "6分钟",
+      summary: "从一个酒感词开始，轮流把今晚的气氛往下接。",
+      reason: "这桌现在不缺开口的人，缺的是更顺手的接话方式。接龙型玩法最适合把聊天节奏继续托住。",
+    },
+    {
+      name: "酒局拍卖会",
+      desc: "把今晚的瞬间拿出来拍一拍。",
+      people: "3-6人",
+      vibe: "更热一点",
+      duration: "10分钟",
+      summary: "轮流拿一个今晚瞬间出来，大家用一句话竞拍它的酒感价值。",
+      reason: "如果你想把这桌再点亮一点，它能把成员活跃度快速拉齐，而且不会太依赖复杂规则。",
+    },
+    {
+      name: "第一杯命名",
+      desc: "给彼此的第一杯起个今晚限定名字。",
+      people: "3人",
+      vibe: "轻松放开",
+      duration: "5分钟",
+      summary: "每个人用一句话给别人的第一杯重新命名。",
+      reason: "成员人数刚好，第一杯也都已经有印象了，用命名法最容易把观察说出来，又不会太重。",
+    },
+  ],
+];
+
+const gameDirections = [
   {
-    label: "轻开场",
-    items: [
-      { name: "第一杯命名", desc: "给彼此的第一杯起个今晚限定名字", people: "3人", vibe: "刚热起来", duration: "5分钟", summary: "每个人用一句话给别人的第一杯重新命名。" },
-      { name: "酒感接龙", desc: "顺着上一位的话接一个更像今晚的酒感", people: "3-5人", vibe: "轻松接话", duration: "6分钟", summary: "从一个酒感词开始，轮流把今晚的气氛往下接。" },
-      { name: "三词形容今晚这局", desc: "用三个词快速给这桌定调", people: "不限", vibe: "开口破冰", duration: "4分钟", summary: "每个人说三个词，最后选一个最像今晚的。" },
-    ],
-  },
-  {
-    label: "升温局",
-    items: [
-      { name: "第二杯法官", desc: "轮流替别人判今晚更适合哪一杯", people: "3-4人", vibe: "已经聊开", duration: "8分钟", summary: "每轮选一人，其余人都给他推荐第二杯并说理由。" },
+    label: "更热一点",
+    games: [
       { name: "酒局拍卖会", desc: "把今晚的瞬间拿出来拍一拍", people: "3-6人", vibe: "热一点", duration: "10分钟", summary: "轮流拿一个今晚瞬间出来，大家用一句话竞拍它的酒感价值。" },
-      { name: "谁最像……", desc: "轻轻把观察说出口", people: "3-5人", vibe: "熟起来之后", duration: "7分钟", summary: "每轮一个题干，大家指向最像的人并说一句原因。" },
+      { name: "第一杯命名", desc: "给彼此的第一杯起个今晚限定名字", people: "3人", vibe: "轻松放开", duration: "5分钟", summary: "每个人用一句话给别人的第一杯重新命名。" },
     ],
   },
   {
-    label: "推理局",
-    items: [
+    label: "更有来有回",
+    games: [
+      { name: "酒感接龙", desc: "顺着上一位的话接一个更像今晚的酒感", people: "3-5人", vibe: "接话顺", duration: "6分钟", summary: "从一个酒感词开始，轮流把今晚的气氛往下接。" },
+      { name: "第二杯法官", desc: "轮流替别人判今晚更适合哪一杯", people: "3-4人", vibe: "已经聊开", duration: "8分钟", summary: "每轮选一人，其余人都给他推荐第二杯并说理由。" },
+    ],
+  },
+  {
+    label: "带点推理",
+    games: [
       { name: "谁是卧底·酒局版", desc: "用酒感而不是词库来找卧底", people: "4-6人", vibe: "想再热一点", duration: "12分钟", summary: "每个人用一句酒感描述自己的词，找出最不像的那位。" },
-      { name: "真假一杯", desc: "说一个真心话，一个假酒感", people: "3-5人", vibe: "轻推理", duration: "8分钟", summary: "每人说两句，大家猜哪一句更像他真实的今晚。" },
       { name: "轻阿瓦隆·酒桌版", desc: "只保留最轻量的怀疑与站队", people: "4-6人", vibe: "想玩一点脑子", duration: "15分钟", summary: "不做复杂身份，只保留桌边站队和判断。" },
     ],
   },
-  {
-    label: "收尾局",
-    items: [
-      { name: "今晚最值得碰杯的一刻", desc: "把今晚的高光说出来", people: "不限", vibe: "准备往回收", duration: "5分钟", summary: "每人说一个瞬间，最后选最值得再碰一杯的那个。" },
-      { name: "如果今晚这局是一首歌", desc: "给这局一个余味", people: "不限", vibe: "微醺收束", duration: "6分钟", summary: "轮流用歌名或者旋律形容今晚。" },
-      { name: "给这局贴标签", desc: "替今晚留下一个共同的称呼", people: "不限", vibe: "好收尾", duration: "4分钟", summary: "从几个标签里选一个，再补一句原因。" },
-    ],
-  },
+];
+
+const popularGames = [
+  { name: "三词形容今晚这局", desc: "用三个词快速给这桌定调", people: "不限", vibe: "轻松", duration: "4分钟", summary: "每个人说三个词，最后选一个最像今晚的。" },
+  { name: "今晚最值得碰杯的一刻", desc: "把今晚的高光说出来", people: "不限", vibe: "收一收也能玩", duration: "5分钟", summary: "每人说一个瞬间，最后选最值得再碰一杯的那个。" },
+  { name: "如果今晚这局是一首歌", desc: "给这局一个余味", people: "不限", vibe: "微醺收束", duration: "6分钟", summary: "轮流用歌名或者旋律形容今晚。" },
 ];
 
 const secondCupModes = [
@@ -759,7 +781,9 @@ function BottomDrawer({ open, title, subtitle, onClose, children }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
           <div>
             <p style={{ fontSize: 15, color: "#fff", fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 500 }}>{title}</p>
-            <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, marginTop: 4, fontFamily: "'Noto Sans SC', sans-serif" }}>{subtitle}</p>
+            {subtitle ? (
+              <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, marginTop: 4, fontFamily: "'Noto Sans SC', sans-serif" }}>{subtitle}</p>
+            ) : null}
           </div>
           <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: MUTED, fontSize: 20, cursor: "pointer", padding: 0 }}>
             ×
@@ -778,6 +802,38 @@ function SimpleCard({ title, desc, action, onClick }) {
       <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.65, marginBottom: 12, fontFamily: "'Noto Sans SC', sans-serif" }}>{desc}</p>
       <button type="button" onClick={onClick} style={{ borderRadius: 999, border: `0.5px solid ${GOLD_DIM}`, background: "transparent", color: GOLD, padding: "7px 12px", fontSize: 12, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}>
         {action}
+      </button>
+    </div>
+  );
+}
+
+function HorizontalGameCard({ game, onClick, compact = false, cta = "查看玩法" }) {
+  return (
+    <div
+      style={{
+        width: compact ? 154 : 238,
+        flexShrink: 0,
+        background: GLASS,
+        border: `0.5px solid ${GLASS_BORDER}`,
+        borderRadius: compact ? 14 : 16,
+        padding: compact ? "12px 12px 11px" : "14px 14px 13px",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+      }}
+    >
+      <p style={{ fontSize: compact ? 13 : 14, color: "#fff", fontWeight: 500, marginBottom: 6, fontFamily: "'Noto Sans SC', sans-serif" }}>{game.name}</p>
+      <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, marginBottom: compact ? 8 : 10, fontFamily: "'Noto Sans SC', sans-serif" }}>{game.desc}</p>
+      {game.reason && !compact && (
+        <p style={{ fontSize: 12, color: SOFT, lineHeight: 1.7, marginBottom: 10, fontFamily: "'Noto Sans SC', sans-serif" }}>{game.reason}</p>
+      )}
+      {!compact && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+          <span style={{ fontSize: 10, color: GOLD, background: GOLD_GLOW, border: `0.5px solid ${GOLD_DIM}`, borderRadius: 999, padding: "4px 8px" }}>{game.people}</span>
+          <span style={{ fontSize: 10, color: SOFT, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${GLASS_BORDER}`, borderRadius: 999, padding: "4px 8px" }}>{game.vibe}</span>
+        </div>
+      )}
+      <button type="button" onClick={onClick} style={{ borderRadius: 999, border: `0.5px solid ${compact ? GLASS_BORDER : GOLD_DIM}`, background: "transparent", color: compact ? SOFT : GOLD, padding: "7px 12px", fontSize: 12, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}>
+        {cta}
       </button>
     </div>
   );
@@ -806,6 +862,7 @@ export default function ChatRoomPreview({
   const [drawer, setDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [bottleIndex, setBottleIndex] = useState(0);
+  const [recommendedIndex, setRecommendedIndex] = useState(0);
   const roomInfo = roomInfoProp || createDefaultRoomInfo();
 
   useEffect(() => {
@@ -821,6 +878,7 @@ export default function ChatRoomPreview({
   }, []);
 
   const quickActions = quickActionsByStage[stage];
+  const activeRecommendedGames = recommendedGameSets[recommendedIndex % recommendedGameSets.length];
 
   const startGameRound = () => {
     if (!selectedGame) return;
@@ -1060,7 +1118,7 @@ export default function ChatRoomPreview({
       <BottomDrawer
         open={drawer === "game"}
         title="来一轮小游戏"
-        subtitle="选一个更适合现在这局气氛的。手机只负责发起，真正好玩的部分留在桌上。"
+        subtitle=""
         onClose={() => {
           setDrawer(null);
           setSelectedGame(null);
@@ -1068,20 +1126,56 @@ export default function ChatRoomPreview({
       >
         {!selectedGame ? (
           <>
-            <CardShell eyebrow="系统推荐" title="适合现在这局：第二杯法官" description="这局已经有来有回了，现在最适合让大家替别人开第二杯判词。">
-              <p style={{ fontSize: 12, color: MUTED, fontFamily: "'Noto Sans SC', sans-serif" }}>如果想热一点：谁是卧底·酒局版</p>
-            </CardShell>
-            {gameCategories.map((category) => (
-              <div key={category.label} style={{ marginBottom: 14 }}>
-                <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>{category.label}</p>
-                {category.items.map((game) => (
-                  <SimpleCard key={game.name} title={game.name} desc={game.desc} action="查看玩法" onClick={() => setSelectedGame(game)} />
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, fontFamily: "'Cormorant Garamond', serif" }}>最适合现在这桌</p>
+                <button type="button" onClick={() => setRecommendedIndex((prev) => (prev + 1) % recommendedGameSets.length)} style={{ background: "none", border: "none", color: GOLD, fontSize: 12, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer", padding: 0 }}>
+                  换一换
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+                {activeRecommendedGames.map((game) => (
+                  <HorizontalGameCard key={game.name} game={game} onClick={() => setSelectedGame(game)} />
                 ))}
               </div>
-            ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>大家常玩的</p>
+              <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+                {popularGames.map((game) => (
+                  <HorizontalGameCard key={game.name} game={game} compact onClick={() => setSelectedGame(game)} cta="看看这个" />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 12, color: GOLD_DIM, letterSpacing: 1.2, marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>换个方向玩</p>
+              <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+                {gameDirections.map((direction) => (
+                  <HorizontalGameCard
+                    key={direction.label}
+                    game={{ ...direction.games[0], name: direction.label, desc: direction.games[0].name, reason: `这桌如果想往这个方向走，先从「${direction.games[0].name}」开始会最顺。` }}
+                    onClick={() => setSelectedGame(direction.games[0])}
+                    cta="往这个方向来"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedGame(activeRecommendedGames[0])}
+              style={{ width: "100%", borderRadius: 12, background: GOLD, color: DEEP, border: "none", padding: "12px 0", fontSize: 14, fontFamily: "'Noto Sans SC', sans-serif", cursor: "pointer" }}
+            >
+              给这桌随便来一个
+            </button>
           </>
         ) : (
           <CardShell eyebrow="游戏详情" title={selectedGame.name} description={selectedGame.summary}>
+            {selectedGame.reason && (
+              <p style={{ fontSize: 12, color: SOFT, lineHeight: 1.7, marginBottom: 12, fontFamily: "'Noto Sans SC', sans-serif" }}>{selectedGame.reason}</p>
+            )}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 11, color: GOLD, background: GOLD_GLOW, border: `0.5px solid ${GOLD_DIM}`, borderRadius: 999, padding: "4px 10px" }}>{selectedGame.people}</span>
               <span style={{ fontSize: 11, color: SOFT, background: "rgba(255,255,255,0.04)", border: `0.5px solid ${GLASS_BORDER}`, borderRadius: 999, padding: "4px 10px" }}>{selectedGame.vibe}</span>
